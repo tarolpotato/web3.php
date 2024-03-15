@@ -2,9 +2,9 @@
 
 /**
  * This file is part of web3.php package.
- * 
+ *
  * (c) Kuan-Cheng,Lai <alk03073135@gmail.com>
- * 
+ *
  * @author Peter Lai <alk03073135@gmail.com>
  * @license MIT
  */
@@ -30,18 +30,18 @@ class Ethabi
 {
     /**
      * types
-     * 
+     *
      * @var array
      */
     protected $types = [];
 
     /**
      * construct
-     * 
+     *
      * @param array $types
      * @return void
      */
-    public function __construct($types=[])
+    public function __construct($types = [])
     {
         if (!is_array($types)) {
             $types = [];
@@ -62,7 +62,7 @@ class Ethabi
 
     /**
      * get
-     * 
+     *
      * @param string $name
      * @return mixed
      */
@@ -78,7 +78,7 @@ class Ethabi
 
     /**
      * set
-     * 
+     *
      * @param string $name
      * @param mixed $value
      * @return mixed
@@ -95,7 +95,7 @@ class Ethabi
 
     /**
      * callStatic
-     * 
+     *
      * @param string $name
      * @param array $arguments
      * @return void
@@ -104,7 +104,7 @@ class Ethabi
 
     /**
      * nestedTypes
-     * 
+     *
      * @param string $name
      * @return mixed
      */
@@ -123,7 +123,7 @@ class Ethabi
 
     /**
      * nestedName
-     * 
+     *
      * @param string $name
      * @return string
      */
@@ -142,7 +142,7 @@ class Ethabi
 
     /**
      * isDynamicArray
-     * 
+     *
      * @param string $name
      * @return bool
      */
@@ -156,7 +156,7 @@ class Ethabi
 
     /**
      * isStaticArray
-     * 
+     *
      * @param string $name
      * @return bool
      */
@@ -170,7 +170,7 @@ class Ethabi
 
     /**
      * isTuple
-     * 
+     *
      * @param string $name
      * @return bool
      */
@@ -184,7 +184,7 @@ class Ethabi
 
     /**
      * parseTupleType
-     * 
+     *
      * @param string $name
      * @return bool
      */
@@ -201,26 +201,29 @@ class Ethabi
     /**
      * parseTupleTypes
      * TODO: replace with lexical analysis
-     * 
+     *
      * @param string $type
      * @param bool $parseInner
      * @return array
      */
-    protected function parseTupleTypes($type, $parseInner = false) {
+    public function parseTupleTypes($type, $parseInner = false)
+    {
         $leftBrackets = [];
         $results = [];
         $offset = 0;
         for ($key = 0; $key < mb_strlen($type); $key++) {
             $char = $type[$key];
             if ($char === '(') {
+                $offset = $key + 1;
                 $leftBrackets[] = $key;
             } else if ($char === ')') {
+                $offset = $key + 1;
                 $leftKey = array_pop($leftBrackets);
                 if (is_null($leftKey)) {
                     throw new InvalidArgumentException('Wrong tuple type: ' . $type);
                 }
             } else if ($char === ',') {
-                if (empty($leftBrackets)) {
+                if (!empty($leftBrackets)) {
                     $length = $key - $offset;
                     $results[] = mb_substr($type, $offset, $length);
                     $offset += $length + 1;
@@ -242,7 +245,7 @@ class Ethabi
 
     /**
      * findAbiType
-     * 
+     *
      * @param string $type
      * @return array
      */
@@ -277,15 +280,13 @@ class Ethabi
             }
             return $result;
         } elseif ($this->isTuple($type)) {
-            $nestedType = $this->parseTupleTypes($type, true)[0];
-            $parsedNestedTypes = $this->parseTupleTypes($nestedType);
+            $parsedNestedTypes = $this->parseTupleTypes($type);
             $tupleAbi = [
                 'type' => $type,
                 'dynamic' => false,
                 'solidityType' => $solidityType,
                 'coders' => []
             ];
-
             foreach ($parsedNestedTypes as $type_) {
                 $parsedType = $this->findAbiType($type_);
                 if ($parsedType['dynamic']) {
@@ -306,7 +307,7 @@ class Ethabi
 
     /**
      * getSolidityType
-     * 
+     *
      * @param string $type
      * @return SolidityType
      */
@@ -338,7 +339,7 @@ class Ethabi
 
     /**
      * parseAbiTypes
-     * 
+     *
      * @param array $types
      * @return array
      */
@@ -353,7 +354,7 @@ class Ethabi
 
     /**
      * encodeFunctionSignature
-     * 
+     *
      * @param string|stdClass|array $functionName
      * @return string
      */
@@ -368,7 +369,7 @@ class Ethabi
     /**
      * encodeEventSignature
      * TODO: Fix same event name with different params
-     * 
+     *
      * @param string|stdClass|array $functionName
      * @return string
      */
@@ -382,7 +383,7 @@ class Ethabi
 
     /**
      * encodeParameter
-     * 
+     *
      * @param string $type
      * @param mixed $param
      * @return string
@@ -397,7 +398,7 @@ class Ethabi
 
     /**
      * encodeParameters
-     * 
+     *
      * @param stdClass|array $types
      * @param array $params
      * @return string
@@ -426,12 +427,12 @@ class Ethabi
         $abiTypes = $this->parseAbiTypes($types);
 
         // encode with tuple type
-        return '0x' . $this->types['tuple']->encode($params, [ 'coders' => $abiTypes ]);
+        return '0x' . $this->types['tuple']->encode($params, ['coders' => $abiTypes]);
     }
 
     /**
      * decodeParameter
-     * 
+     *
      * @param string $type
      * @param mixed $param
      * @return string
@@ -446,7 +447,7 @@ class Ethabi
 
     /**
      * decodeParameters
-     * 
+     *
      * @param stdClass|array $type
      * @param string $param
      * @return string
@@ -456,7 +457,6 @@ class Ethabi
         if (!is_string($param)) {
             throw new InvalidArgumentException('The param must be string.');
         }
-
         // change json to array
         $outputTypes = [];
         if ($types instanceof stdClass && isset($types->outputs)) {
@@ -474,10 +474,9 @@ class Ethabi
         }
         $typesLength = count($types);
         $abiTypes = $this->parseAbiTypes($types);
-
         // decode with tuple type
         $results = [];
-        $decodeResults = $this->types['tuple']->decode(Utils::stripZero($param), 0, [ 'coders' => $abiTypes ]);
+        $decodeResults = $this->types['tuple']->decode(Utils::stripZero($param), 0, ['coders' => $abiTypes]);
         for ($i = 0; $i < $typesLength; $i++) {
             if (isset($outputTypes['outputs'][$i]['name']) && empty($outputTypes['outputs'][$i]['name']) === false) {
                 $results[$outputTypes['outputs'][$i]['name']] = $decodeResults[$i];
