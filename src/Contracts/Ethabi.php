@@ -412,10 +412,17 @@ class Ethabi
         if (is_array($types) && isset($types['inputs'])) {
             $inputTypes = $types;
             $types = [];
-
             foreach ($inputTypes['inputs'] as $input) {
                 if (isset($input['type'])) {
-                    $types[] = $input['type'];
+                    if ($input['type'] == 'tuple') {
+                        $_types = [];
+                        foreach ($input['components'] as $component) {
+                            $_types[] = $component['type'];
+                        }
+                        $types[] = 'tuple(' . implode(',', $_types) . ')';
+                    } else {
+                        $types[] = $input['type'];
+                    }
                 }
             }
         }
@@ -425,7 +432,6 @@ class Ethabi
         $typesLength = count($types);
         $encodes = array_fill(0, $typesLength, '');
         $abiTypes = $this->parseAbiTypes($types);
-
         // encode with tuple type
         return '0x' . $this->types['tuple']->encode($params, ['coders' => $abiTypes]);
     }
